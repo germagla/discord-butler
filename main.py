@@ -1,6 +1,7 @@
 import os
 import discord
 import requests
+import logging
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,6 +11,13 @@ movie_endpoint = 'http://www.omdbapi.com/?apikey=' + omdb_token + '&t='
 voice_connections = {}
 
 butler = discord.Bot()
+
+logger = logging.getLogger('discord')
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler(filename='butler.log', encoding='utf-8', mode='w')
+formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 @butler.event
