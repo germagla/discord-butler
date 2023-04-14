@@ -184,3 +184,13 @@
 2023-04-14 16:31:16,734:DEBUG:discord.gateway: For Shard ID None: WebSocket Event: {'t': None, 's': None, 'op': 11, 'd': None}
 2023-04-14 16:31:57,627:DEBUG:discord.gateway: Keeping shard ID None websocket alive with sequence 19.
 2023-04-14 16:31:57,984:DEBUG:discord.gateway: For Shard ID None: WebSocket Event: {'t': None, 's': None, 'op': 11, 'd': None}
+2023-04-14 16:32:38,881:DEBUG:discord.gateway: Keeping shard ID None websocket alive with sequence 19.
+2023-04-14 16:32:39,239:DEBUG:discord.gateway: For Shard ID None: WebSocket Event: {'t': None, 's': None, 'op': 11, 'd': None}
+2023-04-14 16:33:20,134:DEBUG:discord.gateway: Keeping shard ID None websocket alive with sequence 19.
+2023-04-14 16:33:20,507:DEBUG:discord.gateway: For Shard ID None: WebSocket Event: {'t': None, 's': None, 'op': 11, 'd': None}
+2023-04-14 16:34:01,386:DEBUG:discord.gateway: Keeping shard ID None websocket alive with sequence 19.
+2023-04-14 16:34:01,737:DEBUG:discord.gateway: For Shard ID None: WebSocket Event: {'t': None, 's': None, 'op': 11, 'd': None}
+2023-04-14 16:34:22,211:INFO:discord.client: Cleaning up tasks.
+2023-04-14 16:34:22,211:INFO:discord.client: Cleaning up after 1 tasks.
+2023-04-14 16:34:22,718:INFO:discord.client: All tasks finished cancelling.
+2023-04-14 16:34:22,719:INFO:discord.client: Closing the event loop.
