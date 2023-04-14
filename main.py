@@ -1,16 +1,21 @@
-# This is a sample Python script.
+import os
+import discord
+from dotenv import load_dotenv
 
-# Press ⇧F10 to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+load_dotenv()
+butler_token = os.getenv('BOT_TOKEN')
+butler = discord.Bot()
 
 
-# Press the green button in the gutter to run the script.
+@butler.event
+async def on_ready():
+    print(f'Logged in as {butler.user} (ID: {butler.user.id})')
+
+
+@butler.slash_command()
+async def ping(ctx):
+    await ctx.respond('pong')
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    butler.run(butler_token)
