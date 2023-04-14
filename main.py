@@ -15,12 +15,12 @@ voice_connections = {}
 
 butler = discord.Bot()
 
-logger = logging.getLogger('discord')
-logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(filename='butler.log', encoding='utf-8', mode='w')
-formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+# logger = logging.getLogger('discord')
+# logger.setLevel(logging.DEBUG)
+# handler = logging.FileHandler(filename='butler.log', encoding='utf-8', mode='w')
+# formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s')
+# handler.setFormatter(formatter)
+# logger.addHandler(handler)
 
 
 @butler.event
