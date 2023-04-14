@@ -2,8 +2,10 @@ import os
 import discord
 import requests
 import logging
+import discord.opus
 from dotenv import load_dotenv
 
+#discord.opus.load_opus('libopus.so')
 load_dotenv()
 butler_token = os.getenv('BOT_TOKEN')
 omdb_token = os.getenv('OMDB_API_KEY')
