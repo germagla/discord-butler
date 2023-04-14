@@ -8,6 +8,7 @@ load_dotenv()
 butler_token = os.getenv('BOT_TOKEN')
 omdb_token = os.getenv('OMDB_API_KEY')
 movie_endpoint = 'http://www.omdbapi.com/?apikey=' + omdb_token + '&t='
+active_guilds = [os.getenv('GERMAGLA_BATCAVE_GUILD_ID',)]
 voice_connections = {}
 
 butler = discord.Bot()
@@ -63,7 +64,7 @@ Plot: {movie_json['Plot']}
         await ctx.respond('krakrak. POOF! Something went wrong, please try again later')
 
 
-@butler.slash_command()
+@butler.command()
 async def record(ctx):
     voice = ctx.author.voice
 
