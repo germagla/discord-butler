@@ -4,9 +4,12 @@ import discord
 import openai
 import pydub
 import requests
+import logging
+import discord.opus
 from dotenv import load_dotenv
 from io import BytesIO
 
+#discord.opus.load_opus('libopus.so')
 load_dotenv()
 butler_token = os.getenv('BOT_TOKEN')
 omdb_token = os.getenv('OMDB_API_KEY')
