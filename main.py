@@ -84,10 +84,11 @@ async def record(ctx):
 
         for user_id, audio in sink.audio_data.items():
             wav = pydub.AudioSegment.from_file_using_temporary_files(audio.file)
+            wav = wav[:60000] # 1 minute
             wav.export(f'{user_id}.wav')
             audio_file = open(f'{user_id}.wav', 'rb')
             transcript = openai.Audio.transcribe('whisper-1', audio_file)
-            await ctx.send(f'{user_id}: {transcript.text}')
+            await ctx.send(f'<@{user_id}>: {transcript.text}')
             if os.path.exists(f'{user_id}.wav'):
                 os.remove(f'{user_id}.wav')
 
