@@ -9,7 +9,7 @@ import discord.opus
 from dotenv import load_dotenv
 from io import BytesIO
 
-#discord.opus.load_opus('libopus.so')
+# discord.opus.load_opus('libopus.so')
 load_dotenv()
 butler_token = os.getenv('BOT_TOKEN')
 omdb_token = os.getenv('OMDB_API_KEY')
@@ -25,6 +25,7 @@ butler = discord.Bot()
 @butler.event
 async def on_ready():
     print(f'Logged in as {butler.user} (ID: {butler.user.id})')
+    print(f'{len(butler.guilds)} guilds connected: {", ".join([guild.name for guild in butler.guilds])}')
 
 
 @butler.slash_command()
@@ -63,8 +64,46 @@ Plot: {movie_json['Plot']}
         await ctx.respond('krakrak. POOF! Something went wrong, please try again later')
 
 
+async def finished_recording_callback(sink, channel: discord.TextChannel, *args):
+    recorded_users = [f"<@{user_id}>" for user_id, audio in sink.audio_data.items()]
+
+    await sink.vc.disconnect()
+    # files = [
+    #     discord.File(audio.file, f"{user_id}.{sink.encoding}")
+    #     for user_id, audio in sink.audio_data.items()
+    # ]
+    voices = []
+    for user_id, audio in sink.audio_data.items():
+        user = await butler.fetch_user(user_id)
+        voices.append(discord.File(audio.file, f"{user.name}.{sink.encoding}"))
+
+    await channel.send(
+        f"Finished! Recorded audio for {', '.join(recorded_users)}.", files=voices
+    )
+
+
 @butler.command()
 async def record(ctx):
+    """Record your voice!"""
+    voice = ctx.author.voice
+
+    if not voice:
+        return await ctx.respond("You're not in a vc right now")
+
+    vc = await voice.channel.connect()
+    voice_connections.update({ctx.guild.id: vc})
+
+    vc.start_recording(
+        discord.sinks.MP3Sink(),
+        finished_recording_callback,
+        ctx.channel,
+    )
+
+    await ctx.respond("The recording has started!")
+
+
+@butler.command()
+async def record_and_transcribe(ctx):
     voice = ctx.author.voice
 
     async def segment_and_transcribe(audio_file):
@@ -87,7 +126,7 @@ async def record(ctx):
 
         for user_id, audio in sink.audio_data.items():
             wav = pydub.AudioSegment.from_file_using_temporary_files(audio.file)
-            wav = wav[:60000] # 1 minute
+            wav = wav[:60000]  # 1 minute
             wav.export(f'{user_id}.wav')
             audio_file = open(f'{user_id}.wav', 'rb')
             transcript = openai.Audio.transcribe('whisper-1', audio_file)
