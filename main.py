@@ -106,16 +106,6 @@ async def record(ctx):
 async def record_and_transcribe(ctx):
     voice = ctx.author.voice
 
-    async def segment_and_transcribe(audio_file):
-        audio_segment = pydub.AudioSegment.from_file(audio_file)
-        section_length = 5000
-        for i in range(0, len(audio_segment), section_length):
-            section = audio_segment[i:i + section_length]
-            section.export('temp.wav', format='wav')
-            with open('temp.wav', 'rb') as f:
-                transcript = openai.Audio.transcribe('whisper-1', f)
-                await ctx.send(transcript)
-
     async def once_done(sink: discord.sinks, channel: discord.TextChannel,
                         *args):  # Our voice client already passes these in.
         recorded_users = [  # A list of recorded users
@@ -125,28 +115,17 @@ async def record_and_transcribe(ctx):
         await sink.vc.disconnect()  # Disconnect from the voice channel.
 
         for user_id, audio in sink.audio_data.items():
-            wav = pydub.AudioSegment.from_file_using_temporary_files(audio.file)
-            wav = wav[:60000]  # 1 minute
-            wav.export(f'{user_id}.wav')
-            audio_file = open(f'{user_id}.wav', 'rb')
+            audio_data = pydub.AudioSegment.from_file_using_temporary_files(audio.file)
+            audio_data = audio_data[:60000]  # 1 minute
+            audio_data.export(f'{user_id}.{sink.encoding}')
+            audio_file = open(f'{user_id}.{sink.encoding}', 'rb')
             transcript = openai.Audio.transcribe('whisper-1', audio_file)
             await ctx.send(f'<@{user_id}>: {transcript.text}')
-            if os.path.exists(f'{user_id}.wav'):
-                os.remove(f'{user_id}.wav')
-
-        files = [discord.File(audio.file, f"{user_id}.{sink.encoding}") for user_id, audio in
-                 sink.audio_data.items()]  # List down the files.
-        # for file in files:
-        #     with open(f'{file.filename}', 'w') as f:
-        #         f.write(str(file))
+            if os.path.exists(f'{user_id}.{sink.encoding}'):
+                os.remove(f'{user_id}.{sink.encoding}')
 
         await channel.send(
             f"Finished recording audio for: {', '.join(recorded_users)}.")  # Send a message with the accumulated files.
-        # await segment_and_transcribe(file for file in files)
-        # for user_id, audio in sink.audio_data.items():
-        #     wav = pydub.AudioSegment.from_file(audio.file)
-        #     transcript = openai.Audio.transcribe('whisper-1', wav)
-        #     await ctx.send(transcript)
 
     if not voice:
         await ctx.respond("You aren't in a voice channel!")
@@ -155,7 +134,7 @@ async def record_and_transcribe(ctx):
     voice_connections.update({ctx.guild.id: vc})  # Updating the cache with the guild and channel.
 
     vc.start_recording(
-        discord.sinks.WaveSink(),  # The sink type to use.
+        discord.sinks.MP3Sink(),  # The sink type to use.
         once_done,  # What to do once done.
         ctx.channel  # The channel to disconnect from.
     )
