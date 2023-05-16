@@ -114,15 +114,26 @@ async def record_and_transcribe(ctx):
         ]
         await sink.vc.disconnect()  # Disconnect from the voice channel.
 
+        # for user_id, audio in sink.audio_data.items():
+        #     audio_data = pydub.AudioSegment.from_file_using_temporary_files(audio.file)
+        #     audio_data = audio_data[:240000]  # 4 minutes
+        #     audio_data.export(f'{user_id}.{sink.encoding}')
+        #     audio_file = open(f'{user_id}.{sink.encoding}', 'rb')
+        #     transcript = openai.Audio.transcribe('whisper-1', audio_file)
+        #     await ctx.send(f'<@{user_id}>: {transcript.text}')
+        #     if os.path.exists(f'{user_id}.{sink.encoding}'):
+        #         os.remove(f'{user_id}.{sink.encoding}')
+
         for user_id, audio in sink.audio_data.items():
-            audio_data = pydub.AudioSegment.from_file_using_temporary_files(audio.file)
-            audio_data = audio_data[:60000]  # 1 minute
-            audio_data.export(f'{user_id}.{sink.encoding}')
-            audio_file = open(f'{user_id}.{sink.encoding}', 'rb')
-            transcript = openai.Audio.transcribe('whisper-1', audio_file)
-            await ctx.send(f'<@{user_id}>: {transcript.text}')
-            if os.path.exists(f'{user_id}.{sink.encoding}'):
-                os.remove(f'{user_id}.{sink.encoding}')
+            audio_segments = segment_audio(audio.file, 240000)
+            for segment in audio_segments:
+                segment.export(f'{user_id}.{sink.encoding}')
+                audio_file = open(f'{user_id}.{sink.encoding}', 'rb')
+                transcript = ''
+                transcript += openai.Audio.transcribe('whisper-1', audio_file)
+                if os.path.exists(f'{user_id}.{sink.encoding}'):
+                    os.remove(f'{user_id}.{sink.encoding}')
+                await ctx.send(f'<@{user_id}>: {transcript.text}')
 
         await channel.send(
             f"Finished recording audio for: {', '.join(recorded_users)}.")  # Send a message with the accumulated files.
@@ -212,6 +223,16 @@ async def stop_listening(ctx):
     else:
         await ctx.respond(
             "I am currently not in a voice channel on this server.")  # Respond with this if we aren't recording.
+
+
+def segment_audio(audio_file, segment_length=240000):
+    audio = pydub.AudioSegment.from_file_using_temporary_files(audio_file)
+    audio_length = len(audio)
+    segments = []
+    for start in range(0, audio_length, segment_length):
+        end = min(start + segment_length, audio_length)
+        segments.append(audio[start:end])
+    return segments
 
 
 if __name__ == '__main__':
