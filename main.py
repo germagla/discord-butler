@@ -7,10 +7,22 @@ import requests
 import logging
 import discord.opus
 from dotenv import load_dotenv
-from io import BytesIO
+import boto3
 
 # discord.opus.load_opus('libopus.so')
 load_dotenv()
+
+# Set up AWS credentials and region
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = os.getenv('AWS_ACCESS_KEY_SECRET')
+region_name = os.getenv('AWS_REGION')
+
+# Set up EC2 client
+ec2_client = boto3.client('ec2',
+                          aws_access_key_id=aws_access_key_id,
+                          aws_secret_access_key=aws_secret_access_key,
+                          region_name=region_name)
+
 butler_token = os.getenv('BOT_TOKEN')
 omdb_token = os.getenv('OMDB_API_KEY')
 movie_endpoint = 'http://www.omdbapi.com/?apikey=' + omdb_token + '&t='
@@ -233,6 +245,30 @@ def segment_audio(audio_file, segment_length=240000):
         end = min(start + segment_length, audio_length)
         segments.append(audio[start:end])
     return segments
+
+
+@butler.slash_command()
+async def start_minecraft_server(ctx):
+    instance_id = 'YOUR_EC2_INSTANCE_ID'
+
+    # Start EC2 instance
+    response = ec2_client.start_instances(InstanceIds=[instance_id])
+    if response['StartingInstances'][0]['CurrentState']['Name'] == 'running':
+        await ctx.send('Minecraft server has been started.')
+    else:
+        await ctx.send('Failed to start Minecraft server.')
+
+
+@butler.slash_command()
+async def stop_minecraft_server(ctx):
+    instance_id = 'YOUR_EC2_INSTANCE_ID'
+
+    # Stop EC2 instance
+    response = ec2_client.stop_instances(InstanceIds=[instance_id])
+    if response['StoppingInstances'][0]['CurrentState']['Name'] == 'stopped':
+        await ctx.send('Minecraft server has been stopped.')
+    else:
+        await ctx.send('Failed to stop Minecraft server.')
 
 
 if __name__ == '__main__':
