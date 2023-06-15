@@ -249,7 +249,7 @@ def segment_audio(audio_file, segment_length=240000):
 
 @butler.slash_command()
 async def start_minecraft_server(ctx):
-    instance_id = 'YOUR_EC2_INSTANCE_ID'
+    instance_id = 'i-0db3d95154dc31abb'
 
     # Start EC2 instance
     response = ec2_client.start_instances(InstanceIds=[instance_id])
@@ -261,7 +261,7 @@ async def start_minecraft_server(ctx):
 
 @butler.slash_command()
 async def stop_minecraft_server(ctx):
-    instance_id = 'YOUR_EC2_INSTANCE_ID'
+    instance_id = 'i-0db3d95154dc31abb'
 
     # Stop EC2 instance
     response = ec2_client.stop_instances(InstanceIds=[instance_id])
