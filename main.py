@@ -28,7 +28,7 @@ ec2_client = boto3.client('ec2',
 butler_token = os.getenv('BOT_TOKEN')
 omdb_token = os.getenv('OMDB_API_KEY')
 instance_ID = os.getenv('MINECRAFT_EC2_INSTANCE_ID')
-server_ip = os.getenv('MINECRAFT_SERVER_IP')
+server_ip = os.getenv('MINECRAFT_EC2_INSTANCE_IP')
 movie_endpoint = 'http://www.omdbapi.com/?apikey=' + omdb_token + '&t='
 active_guilds = [os.getenv('GERMAGLA_BATCAVE_GUILD_ID', )]
 openai.api_key = os.getenv('OPENAI_API_KEY')
