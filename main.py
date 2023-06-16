@@ -40,6 +40,12 @@ butler = discord.Bot()
 
 @tasks.loop(minutes=60)  # Run the command every 60 minutes
 async def check_empty_server():
+    try:
+        server = JavaServer.lookup(f"{server_ip}:25565")
+        status = server.status()
+        await announce_to_server(f"The server is online, with {status.players.online} players online.")
+    except ConnectionError:
+        return
     player_count = check_player_count()
 
     if player_count == -1:
