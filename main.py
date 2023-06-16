@@ -1,13 +1,15 @@
-import io
 import os
+import time
+
+import boto3
 import discord
+import discord.opus
 import openai
 import pydub
 import requests
-import logging
-import discord.opus
+from discord.ext import tasks
 from dotenv import load_dotenv
-import boto3
+from mcstatus import JavaServer
 
 # discord.opus.load_opus('libopus.so')
 load_dotenv()
@@ -25,6 +27,8 @@ ec2_client = boto3.client('ec2',
 
 butler_token = os.getenv('BOT_TOKEN')
 omdb_token = os.getenv('OMDB_API_KEY')
+instance_ID = os.getenv('MINECRAFT_EC2_INSTANCE_ID')
+server_ip = os.getenv('MINECRAFT_SERVER_IP')
 movie_endpoint = 'http://www.omdbapi.com/?apikey=' + omdb_token + '&t='
 active_guilds = [os.getenv('GERMAGLA_BATCAVE_GUILD_ID', )]
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -34,8 +38,53 @@ voice_connections = {}
 butler = discord.Bot()
 
 
+@tasks.loop(minutes=60)  # Run the command every 60 minutes
+async def check_empty_server():
+    player_count = check_player_count()
+
+    if player_count == -1:
+        await announce_to_server('Failed to retrieve player count.')
+        return
+
+    if player_count == 0:
+        time.sleep(300)
+        player_count = check_player_count()
+        if player_count == 0:
+            stop_ec2_instance()
+            await announce_to_server()
+
+
+def check_player_count():
+    try:
+        server = JavaServer.lookup(f"{server_ip}:25565")
+        status = server.status()
+        player_count = status.players.online
+        return player_count
+    except Exception as e:
+        print(f"Failed to retrieve player count: {str(e)}")
+        return -1
+
+
+def stop_ec2_instance():
+    response = ec2_client.stop_instances(InstanceIds=[instance_ID])
+    # if response['StoppingInstances'][0]['CurrentState']['Name'] == 'stopped':
+    #     print('EC2 instance has been stopped.')
+    # else:
+    #     print('Failed to stop EC2 instance.')
+    print(response)
+
+
+async def announce_to_server(announcement: str = 'The Minecraft server has been stopped due to inactivity.'):
+    guild = butler.get_guild(int(active_guilds[0]))  # Replace GUILD_ID with your guild/server ID
+    channel = discord.utils.get(guild.text_channels,
+                                name='minecraft-server-management')  # Replace 'general' with the desired channel name
+
+    await channel.send(announcement)
+
+
 @butler.event
 async def on_ready():
+    check_empty_server.start()
     print(f'Logged in as {butler.user} (ID: {butler.user.id})')
     print(f'{len(butler.guilds)} guilds connected: {", ".join([guild.name for guild in butler.guilds])}')
 
@@ -249,26 +298,24 @@ def segment_audio(audio_file, segment_length=240000):
 
 @butler.slash_command()
 async def start_minecraft_server(ctx):
-    instance_id = 'i-0db3d95154dc31abb'
-
     # Start EC2 instance
-    response = ec2_client.start_instances(InstanceIds=[instance_id])
-    if response['StartingInstances'][0]['CurrentState']['Name'] == 'running':
-        await ctx.send('Minecraft server has been started.')
-    else:
-        await ctx.send('Failed to start Minecraft server.')
+    response = ec2_client.start_instances(InstanceIds=[instance_ID])
+    # if response['StartingInstances'][0]['CurrentState']['Name'] == 'running':
+    #     await ctx.send('Minecraft server has been started.')
+    # else:
+    #     await ctx.send('Failed to start Minecraft server.')
+    await ctx.respond(response)
 
 
 @butler.slash_command()
 async def stop_minecraft_server(ctx):
-    instance_id = 'i-0db3d95154dc31abb'
-
     # Stop EC2 instance
-    response = ec2_client.stop_instances(InstanceIds=[instance_id])
-    if response['StoppingInstances'][0]['CurrentState']['Name'] == 'stopped':
-        await ctx.send('Minecraft server has been stopped.')
-    else:
-        await ctx.send('Failed to stop Minecraft server.')
+    response = ec2_client.stop_instances(InstanceIds=[instance_ID])
+    # if response['StoppingInstances'][0]['CurrentState']['Name'] == 'stopped':
+    #     await ctx.send('Minecraft server has been stopped.')
+    # else:
+    #     await ctx.send('Failed to stop Minecraft server.')
+    await ctx.respond(response)
 
 
 if __name__ == '__main__':
