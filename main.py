@@ -59,10 +59,6 @@ async def check_empty_server():
         return
 
     if player_count == -1:
-        await announce_to_server('Failed to retrieve server status. Please check the server manually.')
-        return
-
-    if player_count == -2:
         return
 
     if player_count == 0:
@@ -80,11 +76,8 @@ def check_player_count():
         status = server.status()
         return status.players.online
 
-    except ConnectionError:
-        return -2
-
-    except Exception as e:
-        print(f"Failed to retrieve player count: {str(e)}")
+    except Exception:
+        # print(f"Failed to retrieve player count: {str(e)}")
         return -1
 
 
@@ -341,7 +334,9 @@ async def stop_minecraft_server(ctx):
 
 @butler.slash_command()
 async def check_minecraft_server(ctx):
-    return ec2_client.describe_instances(InstanceIds=[instance_ID])
+    response = ec2_client.describe_instance_status(InstanceIds=[instance_ID], IncludeAllInstances=True)
+    # print(response)
+    await ctx.respond(f"Server status: {response['InstanceStatuses'][0]['InstanceState']['Name']}")
 
 
 if __name__ == '__main__':
