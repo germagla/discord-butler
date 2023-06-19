@@ -336,7 +336,9 @@ async def stop_minecraft_server(ctx):
 async def check_minecraft_server(ctx):
     response = ec2_client.describe_instance_status(InstanceIds=[instance_ID], IncludeAllInstances=True)
     # print(response)
-    await ctx.respond(f"Server status: {response['InstanceStatuses'][0]['InstanceState']['Name']}")
+    await ctx.respond(
+        f"Server status: {response['InstanceStatuses'][0]['InstanceState']['Name']}\n"
+        f"Player count: {check_player_count()}")
 
 
 if __name__ == '__main__':
