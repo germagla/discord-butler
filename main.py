@@ -62,6 +62,9 @@ async def check_empty_server():
         await announce_to_server('Failed to retrieve server status. Please check the server manually.')
         return
 
+    if player_count == -2:
+        return
+
     if player_count == 0:
         await announce_to_server('The server is empty. Stopping the server in 5 minutes.')
         time.sleep(300)
@@ -76,6 +79,9 @@ def check_player_count():
         server = JavaServer.lookup(f"{server_ip}:25565")
         status = server.status()
         return status.players.online
+
+    except ConnectionError:
+        return -2
 
     except Exception as e:
         print(f"Failed to retrieve player count: {str(e)}")
@@ -327,10 +333,15 @@ async def stop_minecraft_server(ctx):
     # Stop EC2 instance
     response = ec2_client.stop_instances(InstanceIds=[instance_ID])
     if response['StoppingInstances'][0]['CurrentState']['Name'] == 'stopping':
-        await ctx.send('Minecraft server stopping...')
+        await ctx.respond('Minecraft server stopping...')
     else:
-        await ctx.send('Failed to stop Minecraft server.')
-    # await ctx.respond(response)
+        await ctx.respond('Failed to stop Minecraft server.')
+    # await ctx.respond
+
+
+@butler.slash_command()
+async def check_minecraft_server(ctx):
+    return ec2_client.describe_instances(InstanceIds=[instance_ID])
 
 
 if __name__ == '__main__':
