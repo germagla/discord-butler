@@ -40,23 +40,34 @@ butler = discord.Bot()
 
 @tasks.loop(minutes=60)  # Run the command every 60 minutes
 async def check_empty_server():
-    try:
-        server = JavaServer.lookup(f"{server_ip}:25565")
-        status = server.status()
-        await announce_to_server(f"The server is online, with {status.players.online} players online.")
-    except ConnectionError:
-        return
+    # try:
+    #     server = JavaServer.lookup(f"{server_ip}:25565")
+    #     status = server.status()
+    #     # await announce_to_server(f"The server is online, with {status.players.online} players online.")
+    #     player_count = check_player_count()
+    #
+    # except ConnectionError:
+    #     return
     player_count = check_player_count()
 
+    if player_count == 1:
+        await announce_to_server('The server is online, but there is only 1 player online. Anyone want to join?')
+        return
+
+    if player_count > 1:
+        await announce_to_server(f"The server is online, with {player_count} players online. The more the merrier!")
+        return
+
     if player_count == -1:
-        await announce_to_server('Failed to retrieve player count.')
+        await announce_to_server('Failed to retrieve server status. Please check the server manually.')
         return
 
     if player_count == 0:
+        await announce_to_server('The server is empty. Stopping the server in 5 minutes.')
         time.sleep(300)
         player_count = check_player_count()
         if player_count == 0:
-            stop_ec2_instance()
+            ec2_client.stop_instances(InstanceIds=[instance_ID])
             await announce_to_server()
 
 
@@ -64,20 +75,11 @@ def check_player_count():
     try:
         server = JavaServer.lookup(f"{server_ip}:25565")
         status = server.status()
-        player_count = status.players.online
-        return player_count
+        return status.players.online
+
     except Exception as e:
         print(f"Failed to retrieve player count: {str(e)}")
         return -1
-
-
-def stop_ec2_instance():
-    response = ec2_client.stop_instances(InstanceIds=[instance_ID])
-    # if response['StoppingInstances'][0]['CurrentState']['Name'] == 'stopped':
-    #     print('EC2 instance has been stopped.')
-    # else:
-    #     print('Failed to stop EC2 instance.')
-    print(response)
 
 
 async def announce_to_server(announcement: str = 'The Minecraft server has been stopped due to inactivity.'):
@@ -306,22 +308,29 @@ def segment_audio(audio_file, segment_length=240000):
 async def start_minecraft_server(ctx):
     # Start EC2 instance
     response = ec2_client.start_instances(InstanceIds=[instance_ID])
-    # if response['StartingInstances'][0]['CurrentState']['Name'] == 'running':
-    #     await ctx.send('Minecraft server has been started.')
-    # else:
-    #     await ctx.send('Failed to start Minecraft server.')
-    await ctx.respond(response)
+    if response['StartingInstances'][0]['CurrentState']['Name'] == 'pending':
+        await ctx.respond('The Minecraft server is starting, give it a minute or two.')
+    else:
+        await ctx.respond('Failed to start Minecraft server. Try again later.')
+    # await ctx.respond(response)
+
+    # {'StartingInstances': [{'CurrentState': {'Code': 0, 'Name': 'pending'}, 'InstanceId': 'i-0db3d95154dc31abb',
+    # 'PreviousState': {'Code': 80, 'Name': 'stopped'}}], 'ResponseMetadata': {'RequestId':
+    # '7bd2dc1e-e440-45f7-8537-2d68681f4a3b', 'HTTPStatusCode': 200, 'HTTPHeaders': {'x-amzn-requestid':
+    # '7bd2dc1e-e440-45f7-8537-2d68681f4a3b', 'cache-control': 'no-cache, no-store', 'strict-transport-security':
+    # 'max-age=31536000; includeSubDomains', 'content-type': 'text/xml;charset=UTF-8', 'content-length': '579',
+    # 'date': 'Sun, 18 Jun 2023 14:06:53 GMT', 'server': 'AmazonEC2'}, 'RetryAttempts': 0}}
 
 
 @butler.slash_command()
 async def stop_minecraft_server(ctx):
     # Stop EC2 instance
     response = ec2_client.stop_instances(InstanceIds=[instance_ID])
-    # if response['StoppingInstances'][0]['CurrentState']['Name'] == 'stopped':
-    #     await ctx.send('Minecraft server has been stopped.')
-    # else:
-    #     await ctx.send('Failed to stop Minecraft server.')
-    await ctx.respond(response)
+    if response['StoppingInstances'][0]['CurrentState']['Name'] == 'stopping':
+        await ctx.send('Minecraft server stopping...')
+    else:
+        await ctx.send('Failed to stop Minecraft server.')
+    # await ctx.respond(response)
 
 
 if __name__ == '__main__':
