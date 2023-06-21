@@ -348,5 +348,6 @@ async def check_minecraft_server(ctx):
             f"Server status: {response['InstanceStatuses'][0]['InstanceState']['Name']}\n"
             f"Player count: {player_count}")
 
-        if __name__ == '__main__':
-            butler.run(butler_token)
+
+if __name__ == '__main__':
+    butler.run(butler_token)
