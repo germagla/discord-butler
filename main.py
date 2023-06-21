@@ -335,11 +335,18 @@ async def stop_minecraft_server(ctx):
 @butler.slash_command()
 async def check_minecraft_server(ctx):
     response = ec2_client.describe_instance_status(InstanceIds=[instance_ID], IncludeAllInstances=True)
+    try:
+        player_count = check_player_count()
+    except Exception as e:
+        player_count = None
     # print(response)
-    await ctx.respond(
-        f"Server status: {response['InstanceStatuses'][0]['InstanceState']['Name']}\n"
-        f"Player count: {check_player_count()}")
+    if player_count is None:
+        await ctx.respond(
+            f"Server status: {response['InstanceStatuses'][0]['InstanceState']['Name']}\n")
+    else:
+        await ctx.respond(
+            f"Server status: {response['InstanceStatuses'][0]['InstanceState']['Name']}\n"
+            f"Player count: {player_count}")
 
-
-if __name__ == '__main__':
-    butler.run(butler_token)
+        if __name__ == '__main__':
+            butler.run(butler_token)
