@@ -309,6 +309,8 @@ async def start_minecraft_server(ctx):
     response = ec2_client.start_instances(InstanceIds=[instance_ID])
     if response['StartingInstances'][0]['CurrentState']['Name'] == 'pending':
         await ctx.respond('The Minecraft server is starting, give it a minute or two.')
+    elif response['StartingInstances'][0]['CurrentState']['Name'] == 'running':
+        await ctx.respond('The Minecraft server is already running.')
     else:
         await ctx.respond('Failed to start Minecraft server. Try again later.')
     # await ctx.respond(response)
@@ -327,6 +329,8 @@ async def stop_minecraft_server(ctx):
     response = ec2_client.stop_instances(InstanceIds=[instance_ID])
     if response['StoppingInstances'][0]['CurrentState']['Name'] == 'stopping':
         await ctx.respond('Minecraft server stopping...')
+    elif response['StoppingInstances'][0]['CurrentState']['Name'] == 'stopped':
+        await ctx.respond('Minecraft server is already stopped.')
     else:
         await ctx.respond('Failed to stop Minecraft server.')
     # await ctx.respond
