@@ -69,6 +69,8 @@ async def check_empty_server():
             ec2_client.stop_instances(InstanceIds=[instance_ID])
             await announce_to_server()
 
+    return
+
 
 def check_player_count():
     try:
