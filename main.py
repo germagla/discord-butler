@@ -48,7 +48,7 @@ async def check_empty_server():
     #
     # except ConnectionError:
     #     return
-    player_count = check_player_count()
+    player_count = check_server().players.online
 
     if player_count == 1:
         await announce_to_server('The server is online, but there is only 1 player online. Anyone want to join?')
@@ -64,7 +64,7 @@ async def check_empty_server():
     if player_count == 0:
         await announce_to_server('The server is empty. Stopping the server in 5 minutes.')
         time.sleep(300)
-        player_count = check_player_count()
+        player_count = check_server().players.online
         if player_count == 0:
             ec2_client.stop_instances(InstanceIds=[instance_ID])
             await announce_to_server()
@@ -72,11 +72,11 @@ async def check_empty_server():
     return
 
 
-def check_player_count():
+def check_server():
     try:
         server = JavaServer.lookup(f"{server_ip}:25565")
         status = server.status()
-        return status.players.online
+        return status
 
     except Exception:
         # print(f"Failed to retrieve player count: {str(e)}")
@@ -342,7 +342,8 @@ async def stop_minecraft_server(ctx):
 async def check_minecraft_server(ctx):
     response = ec2_client.describe_instance_status(InstanceIds=[instance_ID], IncludeAllInstances=True)
     try:
-        player_count = check_player_count()
+        server_status = check_server()
+        player_count = server_status.players.online
     except Exception as e:
         player_count = None
     # print(response)
@@ -352,7 +353,8 @@ async def check_minecraft_server(ctx):
     else:
         await ctx.respond(
             f"Server status: {response['InstanceStatuses'][0]['InstanceState']['Name']}\n"
-            f"Player count: {player_count}")
+            f"Player count: {player_count}"
+            f"Players online: {', '.join([item.name_raw for item in server_status.players.list])}")
 
 
 if __name__ == '__main__':
