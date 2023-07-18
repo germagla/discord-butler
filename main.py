@@ -48,7 +48,11 @@ async def check_empty_server():
     #
     # except ConnectionError:
     #     return
-    player_count = check_server().players.online
+    status = check_server()
+    if status == -1:
+        player_count = -1
+    else:
+        player_count = status.players.online
 
     if player_count == 1:
         await announce_to_server('The server is online, but there is only 1 player online. Anyone want to join?')
@@ -95,7 +99,7 @@ async def announce_to_server(announcement: str = 'The Minecraft server has been 
 async def on_ready():
     check_empty_server.start()
     print(f'Logged in as {butler.user} (ID: {butler.user.id})')
-    print(f'{len(butler.guilds)} guilds connected: {", ".join([guild.name for guild in butler.guilds])}')
+    print(f'{len(butler.guilds)} servers connected: {", ".join([guild.name for guild in butler.guilds])}')
 
 
 @butler.slash_command()
