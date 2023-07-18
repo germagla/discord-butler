@@ -353,8 +353,8 @@ async def check_minecraft_server(ctx):
     else:
         await ctx.respond(
             f"Server status: {response['InstanceStatuses'][0]['InstanceState']['Name']}\n"
-            f"Player count: {player_count}"
-            f"Players online: {', '.join([item.name_raw for item in server_status.players.list])}")
+            f"Player count: {player_count}\n"
+            f"Players online: {', '.join([player.name for player in server_status.players.sample])}")
 
 
 if __name__ == '__main__':
