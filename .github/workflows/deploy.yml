@@ -1,0 +1,35 @@
+name: Deploy to Production Server
+
+on:
+  push:
+    branches:
+      - main  # adjust this if your primary branch is named differently
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Deploy to server
+        env:
+          PORTFOLIO_SERVER_SSH_KEY: ${{ secrets.PORTFOLIO_SERVER_SSH_KEY }}
+          HOST: germagla.dev
+          PORT: 22  # usually 22
+          USER: ubuntu
+        run: |
+          # Install SSH client
+          sudo apt-get install -y ssh-client
+          
+          # Write the SSH key to a file
+          echo "$PORTFOLIO_SERVER_SSH_KEY" > deploy_key
+          chmod 600 deploy_key
+          
+          # Use SSH to log into the server, pull the latest code, and reload Gunicorn
+          ssh -o StrictHostKeyChecking=no -i deploy_key $USER@$HOST -p $PORT "
+            cd discord-butler && 
+            git pull origin &&
+            sudo systemctl restart discord-butler.service
+          "
