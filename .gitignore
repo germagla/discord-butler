@@ -1,4 +1,7 @@
 .idea/
+.vscode/
 env/
 .env
 *.wav
+*.mp3
+**/__pycache__/

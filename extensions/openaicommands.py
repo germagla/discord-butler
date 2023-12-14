@@ -4,7 +4,7 @@ from openai import OpenAI
 from discord.ext import commands
 
 
-class OpenAIText(commands.Cog):
+class OpenAICommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
@@ -63,4 +63,4 @@ class OpenAIText(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(OpenAIText(bot))
+    bot.add_cog(OpenAICommands(bot))
